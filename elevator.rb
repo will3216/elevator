@@ -36,16 +36,18 @@ class Elevator
     @queue
   end
   
-  def up
-    @floor += 1
+  def move_floor(displacement)
+    @floor += displacement
     @queue[@floor] = 0
     self.update_status
   end
   
+  def up
+    self.move_floor(1)
+  end
+  
   def down
-    @floor -= 1
-    @queue[@floor] = 0
-    self.update_status
+    self.move_floor(-1)
   end
   
   def idle
