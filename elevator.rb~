@@ -1,5 +1,7 @@
 
 class Elevator
+  attr_reader :floors :floor :queue :status
+
   def initialize(floor_list, current_floor)
     @queue = floor_list.map { |floor| 0 }
     @floors = floor_list
@@ -7,24 +9,8 @@ class Elevator
     @status = 'idle'
   end
   
-  def floors
-    @floors
-  end
-  
-  def floor
-    @floor
-  end
-  
-  def queue
-    @queue
-  end
-  
   def current_floor
     @floors[@floor]
-  end
-  
-  def status
-    @status
   end
   
   def directions_in_queue
@@ -67,7 +53,7 @@ class Elevator
     self.update_status
   end
   
-  def next_floor
+  def move
     self.send(@status)
     @floors[@floor]
   end

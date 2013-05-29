@@ -1,9 +1,16 @@
 require 'spec_helper'
 
 describe Elevator do
-  before :all do
+  before :each do
     @elevator = Elevator.new ['B','1','2','3','4','5','6','7'], 1
   end
+  
+  subject { @elevator }
+  
+  it { should respond_to(:floors) }
+  it { should respond_to(:floor) }
+  it { should respond_to(:queue) }
+  it { should respond_to(:status) }
   
   describe "#new" do
     it "takes a list of floors with an index and returns an Elevator object" do
@@ -11,33 +18,9 @@ describe Elevator do
     end
   end
   
-  describe "#floors" do
-    it "should return the list of floors passed in on creation of the object" do
-      @elevator.floors.should eql ['B','1','2','3','4','5','6','7']
-    end
-  end
-  
-  describe "#floor" do
-    it "should return the current floor of the elevator" do
-      @elevator.floor.should eql 1
-    end
-  end
-  
-  describe "#queue" do
-    it "should return the queue for this elevator" do
-      @elevator.queue.should eql [0, 0, 0, 0, 0, 0, 0, 0]
-    end
-  end
-  
   describe "#current_floor" do
     it "should return the current floor of the elevator" do
       @elevator.current_floor.should eql '1'
-    end
-  end
-  
-  describe "#status" do
-    it "should get and return the status for this elevator" do
-      @elevator.status.should eql 'idle'
     end
   end
     
@@ -66,16 +49,84 @@ describe Elevator do
   end
   
   describe "#update_status" do
-    it "should have changed the status when the button was pushed" do
+    it "status should be idle if no buttons have been pressed" do
+      @elevator.queue.should eql [0,0,0,0,0,0,0,0]
+      @elevator.update_status.should eql 'idle'
+    end
+    
+    it "should change the status to up when elevator is idle and a floor is pressed above it" do
+      @elevator.instance_variable_set(:@queue, [0,0,0,1,0,0,0,0])
+      @elevator.instance_variable_set(:@floor, 1)
+      @elevator.update_status.should eql 'up'
+    end
+    
+    it "should change the status to down when elevator is idle and a floor is pressed below it" do
+      @elevator.instance_variable_set(:@status, 'idle')
+      @elevator.instance_variable_set(:@queue, [0,0,0,1,0,0,0,0])
+      @elevator.instance_variable_set(:@floor, 5)
+      @elevator.update_status.should eql 'down'
+    end
+    
+    it "should not change the status from up if there are floors above the elevator in the queue" do
+      @elevator.instance_variable_set(:@status, 'up')
+      @elevator.instance_variable_set(:@queue, [0,0,0,1,0,0,0,1])
+      @elevator.instance_variable_set(:@floor, 5)
+      @elevator.update_status.should eql 'up'
+    end
+    
+    it "should not change the status from down if there are floors below the elevator in the queue" do
+      @elevator.instance_variable_set(:@status, 'down')
+      @elevator.instance_variable_set(:@queue, [0,0,0,1,0,0,0,1])
+      @elevator.instance_variable_set(:@floor, 5)
+      @elevator.update_status.should eql 'down'
+    end
+    
+    it "should change the status from down if there are no floors below the elevator in the queue" do
+      @elevator.instance_variable_set(:@status, 'down')
+      @elevator.instance_variable_set(:@queue, [0,0,0,0,0,0,0,1])
+      @elevator.instance_variable_set(:@floor, 5)
+      @elevator.update_status.should_not eql 'down'
       @elevator.status.should eql 'up'
+    end
+    
+    it "should change the status from down if there are no floors below the elevator in the queue" do
+      @elevator.instance_variable_set(:@status, 'down')
+      @elevator.instance_variable_set(:@queue, [0,0,0,0,0,0,0,0])
+      @elevator.instance_variable_set(:@floor, 5)
+      @elevator.update_status.should_not eql 'down'
+      @elevator.status.should eql 'idle'
+    end
+    
+    it "should change the status from up if there are no floors above the elevator in the queue" do
+      @elevator.instance_variable_set(:@status, 'up')
+      @elevator.instance_variable_set(:@queue, [0,0,0,0,0,0,0,0])
+      @elevator.instance_variable_set(:@floor, 5)
+      @elevator.update_status.should_not eql 'up'
+      @elevator.status.should eql 'idle'
+    end
+    
+    it "should change the status from up if there are no floors above the elevator in the queue" do
+      @elevator.instance_variable_set(:@status, 'up')
+      @elevator.instance_variable_set(:@queue, [1,0,0,0,0,0,0,0])
+      @elevator.instance_variable_set(:@floor, 5)
+      @elevator.update_status.should_not eql 'up'
+      @elevator.status.should eql 'down'
     end
   end
   
   describe "#move" do
     it "should move the elevator in the direction its status indicates" do
-      @elevator.move.should eql '2'
+      @elevator.instance_variable_set(:@status, 'down')
+      @elevator.instance_variable_set(:@queue, [0,0,0,1,0,0,0,1])
+      @elevator.instance_variable_set(:@floor, 5)
+      @elevator.move.should eql '4'
       @elevator.move.should eql '3'
-      @elevator.move.should eql '3'
+      @elevator.queue.should eql [0,0,0,0,0,0,0,1]
+      @elevator.move.should eql '4'
+      @elevator.move.should eql '5'
+      @elevator.move.should eql '6'
+      @elevator.move.should eql '7'
+      @elevator.move.should eql '7'
     end
   end
 end
